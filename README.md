@@ -8,10 +8,12 @@ Generator poster fakta 1080×1080 siap share untuk gerakan #CuekinBuzzer Indones
 
 ## Fitur
 
-- Form editor: judul, ringkasan, sumber, tanggal, punchline satir
-- 3 tema: Protes Gelap, Kertas Koran, Hijau Rakyat
-- Preview live + export Canvas PNG 1080×1080
-- Preset 8 berita #CuekinBuzzer dari pemberitaan tepercaya (Kompas, Katadata, Suara.com, Akurat, Mojok, KOMBI.ID, IDN Times, RRI)
+- Form editor: judul, ringkasan, sumber, tanggal, kategori, punchline satir per preset
+- **10 tema poster-protes** (Protes Gelap, Kertas Koran, Hijau Rakyat, Brutalist Kuning, Neon Cyber, Biru Laut, Senja Bara, Minimal Putih, Merah Revolusi, Ungu Senja) dengan pola stripes/dots/grid/rings
+- **3 layout**: Klasik, Headline Raksasa, Kutipan Satir
+- **3 ukuran**: Persegi 1080×1080, Potret 1080×1350, Story 1080×1920
+- Preview live + export Canvas PNG (download anti-gagal + fallback buka tab baru)
+- Preset 8 berita #CuekinBuzzer dari pemberitaan tepercaya (Kompas, Katadata, Suara.com, Akurat, Mojok, KOMBI.ID, IDN Times, RRI) — masing-masing dengan kategori & punchline satir
 - Salin caption siap share (WA / Instagram / X / Threads)
 
 ## Tech
