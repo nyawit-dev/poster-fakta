@@ -1,6 +1,13 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import CopyButton from '$lib/components/CopyButton.svelte';
   import news from '$lib/data/news.json';
+
+  // Hangatkan font sejak halaman dimuat, supaya download sinkron
+  // langsung pakai font yang benar tanpa perlu await saat klik.
+  onMount(() => {
+    document.fonts?.ready.then(() => {}).catch(() => {});
+  });
 
   type Pattern = 'none' | 'stripes' | 'dots' | 'grid' | 'rings';
   type Theme = {
@@ -369,40 +376,53 @@
     return c;
   }
 
-  function saveBlob(blob: Blob) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `poster-fakta-${ukuran.id}.png`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-  }
-
-  async function downloadPNG() {
+  // PENTING: download & buka tab HARUS sinkron dalam handler klik.
+  // `await` sebelum klik akan menghilangkan user-gesture -> browser memblokir
+  // download (saveBlob) maupun popup (window.open). Jadi gambar langsung di sini.
+  function downloadPNG() {
     try {
-      await document.fonts.ready;
       const c = drawPoster();
-      c.toBlob((blob) => {
-        if (blob) {
-          saveBlob(blob);
-          pesan = `Poster ${ukuran.w}×${ukuran.h} berhasil diunduh.`;
-        } else {
-          window.open(c.toDataURL('image/png'), '_blank');
-          pesan = 'Download langsung gagal — PNG dibuka di tab baru, simpan manual dari sana.';
-        }
-      }, 'image/png');
+      const url = c.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `poster-fakta-${ukuran.id}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      pesan = `Poster ${ukuran.w}×${ukuran.h} berhasil diunduh. Kalau browser-mu memblokir, pakai tombol “Buka di Tab Baru”.`;
     } catch (e) {
       pesan = 'Gagal membuat poster. Coba refresh halaman lalu ulangi.';
     }
   }
 
-  async function openPNG() {
-    await document.fonts.ready;
-    const c = drawPoster();
-    window.open(c.toDataURL('image/png'), '_blank');
-    pesan = 'PNG dibuka di tab baru — klik kanan / tekan lama untuk simpan.';
+  function openPNG() {
+    // Buka jendela DULU (sinkron, saat gesture klik masih ada), isi belakangan.
+    let win: Window | null = null;
+    try {
+      win = window.open('about:blank', '_blank');
+    } catch {
+      win = null;
+    }
+    try {
+      const c = drawPoster();
+      const url = c.toDataURL('image/png');
+      if (win) {
+        win.location.href = url;
+        pesan = 'PNG dibuka di tab baru — klik kanan / tekan lama untuk simpan.';
+      } else {
+        // popup diblokir -> fallback download langsung
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `poster-fakta-${ukuran.id}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        pesan = 'Popup diblokir browser — file diunduh langsung sebagai gantinya.';
+      }
+    } catch (e) {
+      if (win) win.close();
+      pesan = 'Gagal membuat poster. Coba refresh halaman lalu ulangi.';
+    }
   }
 
   function patternCSS(t: Theme): string {
