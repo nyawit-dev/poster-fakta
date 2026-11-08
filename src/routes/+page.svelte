@@ -83,6 +83,21 @@
     return (r * 299 + g * 587 + b * 114) / 1000 > 160 ? '#111111' : '#ffffff';
   }
 
+  function star(ctx: CanvasRenderingContext2D, cx: number, cy: number, spikes: number, outer: number, inner: number) {
+    let rot = (Math.PI / 2) * 3;
+    const step = Math.PI / spikes;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outer);
+    for (let i = 0; i < spikes; i++) {
+      ctx.lineTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
+      rot += step;
+      ctx.lineTo(cx + Math.cos(rot) * inner, cy + Math.sin(rot) * inner);
+      rot += step;
+    }
+    ctx.lineTo(cx, cy - outer);
+    ctx.closePath();
+  }
+
   function drawPattern(ctx: CanvasRenderingContext2D, t: Theme, W: number, H: number) {
     ctx.save();
     if (t.pattern === 'stripes') {
@@ -117,45 +132,198 @@
     ctx.restore();
   }
 
+  /** Art treatment khas tiap tema — di atas panel, di bawah teks */
+  function drawPanelArt(ctx: CanvasRenderingContext2D, t: Theme, M: number, W: number, H: number) {
+    const px = M, py = M, pw = W - M * 2, ph = H - M * 2;
+    ctx.save();
+    switch (t.id) {
+      case 'protes': {
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = t.accent;
+        ctx.save();
+        ctx.translate(px + pw * 0.55, py + ph);
+        ctx.rotate(-0.35);
+        ctx.fillRect(0, -46, pw * 0.55, 46);
+        ctx.restore();
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = t.accent2;
+        ctx.beginPath(); ctx.arc(px + pw - 90, py + 120, 34, 0, Math.PI * 2); ctx.fill();
+        break;
+      }
+      case 'kertas': {
+        ctx.globalAlpha = 0.10;
+        ctx.strokeStyle = t.accent;
+        ctx.lineWidth = 2;
+        for (let y = py + 90; y < py + ph; y += 64) {
+          ctx.beginPath(); ctx.moveTo(px + 24, y); ctx.lineTo(px + pw - 24, y); ctx.stroke();
+        }
+        ctx.globalAlpha = 0.55;
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(px + 24, py + 64); ctx.lineTo(px + pw - 24, py + 64); ctx.stroke();
+        break;
+      }
+      case 'hijau': {
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = t.accent;
+        ctx.beginPath(); ctx.arc(px + pw - 120, py + 150, 150, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = t.accent2;
+        ctx.beginPath(); ctx.arc(px + pw - 240, py + 90, 70, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(px + 110, py + ph - 120, 90, 0, Math.PI * 2); ctx.fill();
+        break;
+      }
+      case 'kuning': {
+        ctx.globalAlpha = 0.95;
+        ctx.fillStyle = t.accent;
+        star(ctx, px + pw - 130, py + 140, 12, 110, 52);
+        ctx.fill();
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = t.accent2;
+        ctx.fillRect(px + 40, py + ph - 70, pw - 80, 22);
+        break;
+      }
+      case 'neon': {
+        ctx.globalAlpha = 0.5;
+        ctx.strokeStyle = t.accent;
+        ctx.lineWidth = 4;
+        ctx.shadowColor = t.accent; ctx.shadowBlur = 24;
+        ctx.beginPath(); ctx.arc(px + pw - 150, py + 170, 100, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = t.accent2; ctx.shadowColor = t.accent2;
+        ctx.beginPath(); ctx.arc(px + pw - 190, py + 220, 160, 0, Math.PI * 2); ctx.stroke();
+        ctx.shadowBlur = 0;
+        break;
+      }
+      case 'laut': {
+        ctx.globalAlpha = 0.22;
+        ctx.strokeStyle = t.accent;
+        ctx.lineWidth = 8;
+        for (let row = 0; row < 4; row++) {
+          const baseY = py + ph - 60 - row * 44;
+          for (let x = px; x < px + pw; x += 90) {
+            ctx.beginPath(); ctx.arc(x + 45, baseY, 45, Math.PI, 0); ctx.stroke();
+          }
+        }
+        break;
+      }
+      case 'senja': {
+        const sx = px + pw - 190, sy = py + 230;
+        const g = ctx.createRadialGradient(sx, sy, 10, sx, sy, 210);
+        g.addColorStop(0, t.accent2);
+        g.addColorStop(0.55, t.accent);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(sx, sy, 210, 0, Math.PI * 2); ctx.fill();
+        break;
+      }
+      case 'minimal': {
+        ctx.globalAlpha = 0.8;
+        ctx.strokeStyle = t.accent;
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(px + 48, py + 84); ctx.lineTo(px + 240, py + 84); ctx.stroke();
+        ctx.fillStyle = t.accent2;
+        ctx.fillRect(px + 48, py + 100, 14, 14);
+        break;
+      }
+      case 'revolusi': {
+        ctx.globalAlpha = 0.28;
+        ctx.fillStyle = t.accent;
+        star(ctx, px + pw - 170, py + ph - 220, 5, 190, 80);
+        ctx.fill();
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = t.accent2;
+        ctx.save();
+        ctx.translate(px + pw / 2, py + 120);
+        ctx.rotate(-0.06);
+        ctx.fillRect(-pw / 2 + 60, -26, pw - 120, 52);
+        ctx.restore();
+        break;
+      }
+      case 'ungu': {
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = t.accent;
+        ctx.beginPath(); ctx.ellipse(px + pw - 150, py + 180, 190, 120, 0.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = t.accent2;
+        ctx.beginPath(); ctx.ellipse(px + 140, py + ph - 190, 170, 100, -0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(px + pw - 300, py + ph - 140, 120, 70, 0.3, 0, Math.PI * 2); ctx.fill();
+        break;
+      }
+    }
+    ctx.restore();
+  }
+
   function drawPoster(): HTMLCanvasElement {
     const W = ukuran.w, H = ukuran.h;
     const c = document.createElement('canvas');
     c.width = W; c.height = H;
     const ctx = c.getContext('2d')!;
     const t = tema;
-    const M = 64; // margin panel
+    const M = 64;
     const pad = 48;
+    const X = M + pad;
+    const maxW = W - M * 2 - pad * 2;
 
     ctx.fillStyle = t.bg; ctx.fillRect(0, 0, W, H);
     drawPattern(ctx, t, W, H);
+
+    // bayangan brutalist miring di belakang panel
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = t.accent;
+    ctx.fillRect(M + 18, M + 18, W - M * 2, H - M * 2);
+    ctx.restore();
+
     ctx.fillStyle = t.panel; ctx.fillRect(M, M, W - M * 2, H - M * 2);
     ctx.strokeStyle = '#000000'; ctx.lineWidth = 10; ctx.strokeRect(M, M, W - M * 2, H - M * 2);
     ctx.fillStyle = t.accent; ctx.fillRect(M, M, W - M * 2, 20);
 
-    const X = M + pad;
-    const maxW = W - M * 2 - pad * 2;
+    drawPanelArt(ctx, t, M, W, H);
 
+    // watermark raksasa miring
+    ctx.save();
+    ctx.translate(W * 0.58, H * 0.52);
+    ctx.rotate(-0.16);
+    ctx.globalAlpha = 0.07;
+    ctx.fillStyle = t.text;
+    ctx.font = '900 230px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('#CUEKIN', 0, 0);
+    ctx.restore();
+    ctx.textAlign = 'left';
+
+    // header
     ctx.fillStyle = t.accent;
     ctx.font = '700 36px "JetBrains Mono", monospace';
     ctx.fillText('#CUEKINBUZZER', X, M + pad + 44);
-
-    // chip kategori
-    ctx.font = '700 26px "JetBrains Mono", monospace';
-    const chipText = kategori;
-    const chipW = ctx.measureText(chipText).width + 36;
-    ctx.fillStyle = t.accent;
-    ctx.beginPath();
-    if ((ctx as any).roundRect) (ctx as any).roundRect(X, M + pad + 62, chipW, 44, 22);
-    else ctx.rect(X, M + pad + 62, chipW, 44);
-    ctx.fill();
-    ctx.fillStyle = contrast(t.accent);
-    ctx.fillText(chipText, X + 18, M + pad + 94);
-
     ctx.fillStyle = t.sub;
     ctx.font = '600 28px "JetBrains Mono", monospace';
-    ctx.fillText(`${tanggal} · ${sumber}`, X, M + pad + 150);
+    ctx.fillText(`${tanggal} · ${sumber}`, X, M + pad + 92);
 
-    let y = M + pad + 240;
+    // stempel kategori berputar
+    ctx.save();
+    ctx.translate(W - M - pad - 110, M + pad + 52);
+    ctx.rotate(-0.12);
+    ctx.font = '800 26px "JetBrains Mono", monospace';
+    const sw = ctx.measureText(kategori).width + 40;
+    ctx.strokeStyle = t.accent; ctx.lineWidth = 5;
+    ctx.strokeRect(-sw / 2, -30, sw, 56);
+    ctx.fillStyle = t.accent;
+    ctx.textAlign = 'center';
+    ctx.fillText(kategori, 0, 10);
+    ctx.restore();
+    ctx.textAlign = 'left';
+
+    const center = layout !== 'klasik';
+    const TX = center ? W / 2 : X;
+    ctx.textAlign = center ? 'center' : 'left';
+
+    let y = M + pad + 230;
+    if (layout === 'quote') {
+      ctx.fillStyle = t.accent;
+      ctx.font = '900 170px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText('“', TX, y + 30);
+      y += 130;
+    }
+
     const titleSize = layout === 'raksasa' ? 112 : layout === 'quote' ? 60 : 76;
     const sumSize = layout === 'raksasa' ? 34 : 38;
     const punchSize = layout === 'quote' ? 84 : layout === 'raksasa' ? 52 : 40;
@@ -163,7 +331,7 @@
     ctx.fillStyle = t.text;
     ctx.font = `900 ${titleSize}px "Plus Jakarta Sans", sans-serif`;
     for (const line of wrap(ctx, judul, maxW)) {
-      ctx.fillText(line, X, y);
+      ctx.fillText(line, TX, y);
       y += titleSize + 16;
     }
 
@@ -171,7 +339,7 @@
     ctx.fillStyle = t.sub;
     ctx.font = `600 ${sumSize}px "Plus Jakarta Sans", sans-serif`;
     for (const line of wrap(ctx, ringkasan, maxW)) {
-      ctx.fillText(line, X, y);
+      ctx.fillText(line, TX, y);
       y += sumSize + 14;
     }
 
@@ -180,11 +348,21 @@
     ctx.font = `800 ${punchSize}px "Plus Jakarta Sans", sans-serif`;
     const punchLines = wrap(ctx, punchline, maxW);
     let py = Math.min(y + 72, footerY - punchLines.length * (punchSize + 14));
+    let first = true;
     for (const line of punchLines) {
-      ctx.fillText(line, X, py);
+      ctx.fillText(line, TX, py);
+      if (first) {
+        const lw = ctx.measureText(line).width;
+        const sx2 = center ? TX - lw / 2 : TX;
+        ctx.globalAlpha = 0.85;
+        ctx.fillRect(sx2, py + 14, lw, 8);
+        ctx.globalAlpha = 1;
+        first = false;
+      }
       py += punchSize + 14;
     }
 
+    ctx.textAlign = 'left';
     ctx.fillStyle = t.sub;
     ctx.font = '700 28px "JetBrains Mono", monospace';
     ctx.fillText('poster-fakta · nyawit-dev · MIT', X, footerY);
@@ -284,7 +462,7 @@
     </div>
 
     <h2 class="mt-8 text-2xl font-black">2 · Tema, layout & ukuran</h2>
-    <p class="mt-3 font-mono text-xs font-black tracking-widest">TEMA (10)</p>
+    <p class="mt-3 font-mono text-xs font-black tracking-widest">TEMA (10) — tiap tema punya gaya gambar sendiri</p>
     <div class="mt-2 flex flex-wrap gap-2">
       {#each themes as t}
         <button onclick={() => (tema = t)} class="rounded-full border-2 border-black px-3 py-1.5 text-xs font-black transition {tema.id === t.id ? 'bg-black text-white' : 'bg-white text-black hover:-translate-y-0.5'}">{t.label}</button>
@@ -317,20 +495,25 @@
   <div>
     <div class="card-shadow relative mx-auto w-full max-w-[520px] overflow-hidden rounded-3xl border-2 border-black" style="background:{tema.bg}; color:{tema.text}; aspect-ratio: {ukuran.w} / {ukuran.h}">
       <div class="absolute inset-0 opacity-20" style="background-image:{patternCSS(tema)}; background-size: {tema.pattern === 'dots' ? '28px 28px' : tema.pattern === 'rings' ? '130px 130px' : '48px 48px'}"></div>
+      <div class="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full opacity-30" style="background:{tema.accent}"></div>
+      <div class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 select-none whitespace-nowrap text-[86px] font-black leading-none opacity-[0.08]">#CUEKIN</div>
       <div class="absolute inset-4 rounded-2xl border-[3px] border-black p-5 md:inset-6 md:p-7" style="background:{tema.panel}">
         <div style="height:6px; background:{tema.accent}" class="-m-5 mb-5 md:-m-7 md:mb-7"></div>
-        <div class="flex flex-wrap items-center gap-2">
-          <p class="font-mono text-xs font-black tracking-widest" style="color:{tema.accent}">#CUEKINBUZZER</p>
-          <span class="rounded-full px-2.5 py-0.5 font-mono text-[10px] font-black" style="background:{tema.accent}; color:{contrast(tema.accent)}">{kategori}</span>
+        <div class="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <p class="font-mono text-xs font-black tracking-widest" style="color:{tema.accent}">#CUEKINBUZZER</p>
+            <p class="mt-1 font-mono text-[11px] font-bold" style="color:{tema.sub}">{tanggal} · {sumber}</p>
+          </div>
+          <span class="-rotate-6 rounded-sm border-[3px] px-2 py-1 font-mono text-[10px] font-black" style="border-color:{tema.accent}; color:{tema.accent}">{kategori}</span>
         </div>
-        <p class="mt-1 font-mono text-[11px] font-bold" style="color:{tema.sub}">{tanggal} · {sumber}</p>
-        <h3 class="{layout === 'raksasa' ? 'text-4xl md:text-5xl' : layout === 'quote' ? 'text-2xl md:text-3xl' : 'text-3xl md:text-4xl'} mt-5 font-black leading-tight">{judul}</h3>
+        {#if layout === 'quote'}<p class="mt-4 text-6xl font-black leading-none" style="color:{tema.accent}">“</p>{/if}
+        <h3 class="{layout === 'raksasa' ? 'text-4xl md:text-5xl' : layout === 'quote' ? 'text-2xl md:text-3xl' : 'text-3xl md:text-4xl'} mt-3 font-black leading-tight">{judul}</h3>
         <p class="mt-3 font-semibold leading-relaxed" style="color:{tema.sub}">{ringkasan}</p>
         <p class="{layout === 'quote' ? 'text-3xl md:text-4xl' : 'text-xl md:text-2xl'} mt-5 font-black leading-snug" style="color:{tema.accent}">{layout === 'quote' ? `“${punchline}”` : punchline}</p>
         <p class="absolute bottom-4 left-5 font-mono text-[10px] font-bold md:bottom-6 md:left-7" style="color:{tema.sub}">poster-fakta · nyawit-dev · MIT</p>
       </div>
     </div>
-    <p class="mt-3 text-center font-mono text-xs text-white/60">Preview live ({ukuran.label}) — PNG hasil unduhan akan mengikuti tema, layout, dan ukuran ini.</p>
+    <p class="mt-3 text-center font-mono text-xs text-white/60">Preview live ({ukuran.label}) — PNG hasil unduhan mengikuti tema, layout, dan ukuran ini.</p>
   </div>
 </section>
 
@@ -363,7 +546,7 @@
     <div class="card-shadow rounded-2xl border-2 border-black bg-[#f59e0b] p-6 text-black">
       <p class="font-mono text-4xl font-black">02</p>
       <p class="mt-2 font-black">Pilih tema, layout & ukuran</p>
-      <p class="mt-1 text-sm font-semibold">10 tema, 3 layout (Klasik, Headline Raksasa, Kutipan), 3 ukuran (persegi, potret, story).</p>
+      <p class="mt-1 text-sm font-semibold">10 tema bergaya beda (starburst, matahari senja, gelombang, glow neon, garis koran), 3 layout, 3 ukuran.</p>
     </div>
     <div class="card-shadow rounded-2xl border-2 border-black bg-[#e11d48] p-6 text-white">
       <p class="font-mono text-4xl font-black">03</p>
