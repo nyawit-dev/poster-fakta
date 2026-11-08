@@ -323,50 +323,79 @@
     const TX = center ? W / 2 : X;
     ctx.textAlign = center ? 'center' : 'left';
 
-    let y = M + pad + 230;
-    if (layout === 'quote') {
-      ctx.fillStyle = t.accent;
-      ctx.font = '900 170px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('“', TX, y + 30);
-      y += 130;
+    const footerY = H - M - pad - 40;
+    const yTop = M + pad + 230;
+    const budget = footerY - 60 - yTop; // ruang vertikal tersedia untuk semua teks
+
+    // --- Adaptif: kecilkan font bertahap sampai semua teks muat dalam budget.
+    // Ini yang mencegah teks bertumpuk untuk judul/ringkasan yang panjang.
+    let titleSize = layout === 'raksasa' ? 108 : layout === 'quote' ? 58 : 72;
+    let sumSize = layout === 'raksasa' ? 32 : 38;
+    let punchSize = layout === 'quote' ? 80 : layout === 'raksasa' ? 50 : 40;
+    let titleLines: string[] = [], sumLines: string[] = [], punchLines: string[] = [];
+
+    for (let iter = 0; iter < 60; iter++) {
+      ctx.font = `900 ${titleSize}px "Plus Jakarta Sans", sans-serif`;
+      titleLines = wrap(ctx, judul, maxW);
+      ctx.font = `600 ${sumSize}px "Plus Jakarta Sans", sans-serif`;
+      sumLines = wrap(ctx, ringkasan, maxW);
+      ctx.font = `800 ${punchSize}px "Plus Jakarta Sans", sans-serif`;
+      punchLines = wrap(ctx, punchline, maxW);
+
+      const quoteH = layout === 'quote' ? 150 : 0;
+      const total =
+        quoteH +
+        titleLines.length * (titleSize + 14) +
+        24 +
+        sumLines.length * (sumSize + 12) +
+        56 +
+        punchLines.length * (punchSize + 12);
+
+      if (total <= budget) break;
+      if (titleSize <= 38 && sumSize <= 22 && punchSize <= 24) break;
+      titleSize = Math.max(38, titleSize - 4);
+      sumSize = Math.max(22, sumSize - 2);
+      punchSize = Math.max(24, punchSize - 2);
     }
 
-    const titleSize = layout === 'raksasa' ? 112 : layout === 'quote' ? 60 : 76;
-    const sumSize = layout === 'raksasa' ? 34 : 38;
-    const punchSize = layout === 'quote' ? 84 : layout === 'raksasa' ? 52 : 40;
+    let y = yTop;
+    if (layout === 'quote') {
+      ctx.fillStyle = t.accent;
+      ctx.font = `900 ${Math.round(titleSize * 2.2)}px "Plus Jakarta Sans", sans-serif`;
+      ctx.fillText('“', TX, y + 30);
+      y += 150;
+    }
 
     ctx.fillStyle = t.text;
     ctx.font = `900 ${titleSize}px "Plus Jakarta Sans", sans-serif`;
-    for (const line of wrap(ctx, judul, maxW)) {
+    for (const line of titleLines) {
       ctx.fillText(line, TX, y);
-      y += titleSize + 16;
+      y += titleSize + 14;
     }
 
     y += 24;
     ctx.fillStyle = t.sub;
     ctx.font = `600 ${sumSize}px "Plus Jakarta Sans", sans-serif`;
-    for (const line of wrap(ctx, ringkasan, maxW)) {
+    for (const line of sumLines) {
       ctx.fillText(line, TX, y);
-      y += sumSize + 14;
+      y += sumSize + 12;
     }
 
-    const footerY = H - M - pad - 40;
+    y += 56;
     ctx.fillStyle = t.accent;
     ctx.font = `800 ${punchSize}px "Plus Jakarta Sans", sans-serif`;
-    const punchLines = wrap(ctx, punchline, maxW);
-    let py = Math.min(y + 72, footerY - punchLines.length * (punchSize + 14));
     let first = true;
     for (const line of punchLines) {
-      ctx.fillText(line, TX, py);
+      ctx.fillText(line, TX, y);
       if (first) {
         const lw = ctx.measureText(line).width;
         const sx2 = center ? TX - lw / 2 : TX;
         ctx.globalAlpha = 0.85;
-        ctx.fillRect(sx2, py + 14, lw, 8);
+        ctx.fillRect(sx2, y + 12, lw, 7);
         ctx.globalAlpha = 1;
         first = false;
       }
-      py += punchSize + 14;
+      y += punchSize + 12;
     }
 
     ctx.textAlign = 'left';
@@ -452,10 +481,10 @@
     <h2 class="text-2xl font-black">1 · Isi poster</h2>
 
     <label class="mt-6 block font-mono text-xs font-black tracking-widest" for="judul">JUDUL</label>
-    <textarea id="judul" bind:value={judul} rows="2" class="mt-2 w-full rounded-xl border-2 border-black bg-white p-3 font-bold" maxlength="120"></textarea>
+    <textarea id="judul" bind:value={judul} rows="2" class="mt-2 w-full rounded-xl border-2 border-black bg-white p-3 font-bold" maxlength="160"></textarea>
 
     <label class="mt-4 block font-mono text-xs font-black tracking-widest" for="ringkasan">RINGKASAN</label>
-    <textarea id="ringkasan" bind:value={ringkasan} rows="3" class="mt-2 w-full rounded-xl border-2 border-black bg-white p-3 font-semibold" maxlength="220"></textarea>
+    <textarea id="ringkasan" bind:value={ringkasan} rows="3" class="mt-2 w-full rounded-xl border-2 border-black bg-white p-3 font-semibold" maxlength="320"></textarea>
 
     <div class="mt-4 grid grid-cols-2 gap-3">
       <div>
@@ -477,7 +506,7 @@
       </div>
       <div>
         <label class="block font-mono text-xs font-black tracking-widest" for="punchline">PUNCHLINE SATIR</label>
-        <input id="punchline" bind:value={punchline} class="mt-2 w-full rounded-xl border-2 border-black bg-white p-3 font-semibold" maxlength="110" />
+        <input id="punchline" bind:value={punchline} class="mt-2 w-full rounded-xl border-2 border-black bg-white p-3 font-semibold" maxlength="150" />
       </div>
     </div>
 
@@ -527,9 +556,9 @@
           <span class="-rotate-6 rounded-sm border-[3px] px-2 py-1 font-mono text-[10px] font-black" style="border-color:{tema.accent}; color:{tema.accent}">{kategori}</span>
         </div>
         {#if layout === 'quote'}<p class="mt-4 text-6xl font-black leading-none" style="color:{tema.accent}">“</p>{/if}
-        <h3 class="{layout === 'raksasa' ? 'text-4xl md:text-5xl' : layout === 'quote' ? 'text-2xl md:text-3xl' : 'text-3xl md:text-4xl'} mt-3 font-black leading-tight">{judul}</h3>
-        <p class="mt-3 font-semibold leading-relaxed" style="color:{tema.sub}">{ringkasan}</p>
-        <p class="{layout === 'quote' ? 'text-3xl md:text-4xl' : 'text-xl md:text-2xl'} mt-5 font-black leading-snug" style="color:{tema.accent}">{layout === 'quote' ? `“${punchline}”` : punchline}</p>
+        <h3 class="line-clamp-4 {layout === 'raksasa' ? 'text-4xl md:text-5xl' : layout === 'quote' ? 'text-2xl md:text-3xl' : 'text-3xl md:text-4xl'} mt-3 font-black leading-tight">{judul}</h3>
+        <p class="line-clamp-5 mt-3 font-semibold leading-relaxed" style="color:{tema.sub}">{ringkasan}</p>
+        <p class="line-clamp-3 {layout === 'quote' ? 'text-3xl md:text-4xl' : 'text-xl md:text-2xl'} mt-5 font-black leading-snug" style="color:{tema.accent}">{layout === 'quote' ? `“${punchline}”` : punchline}</p>
         <p class="absolute bottom-4 left-5 font-mono text-[10px] font-bold md:bottom-6 md:left-7" style="color:{tema.sub}">poster-fakta · nyawit-dev · MIT</p>
       </div>
     </div>
